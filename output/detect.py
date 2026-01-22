@@ -1,20 +1,38 @@
 import os
+import time
 import cv2
 from ultralytics import YOLO
 
-# Load COCO-pretrained YOLOv8 nano
-model = YOLO("yolov8n.pt")
-
+# -----------------------------
+# CONFIG
+# -----------------------------
 IMAGE_DIR = "../images"
 OUTPUT_DIR = "../outputs"
-ELEPHANT_CLASS_ID = 20  # COCO class ID
+ELEPHANT_CLASS_ID = 20
+BENCHMARK_RUNS = 50
+
+# -----------------------------
+# LOAD MODEL (COCO pretrained)
+# -----------------------------
+model = YOLO("yolov8n.pt")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-for img_name in os.listdir(IMAGE_DIR):
-    if not img_name.lower().endswith((".jpg", ".jpeg", ".png")):
-        continue
+# -----------------------------
+# NORMAL INFERENCE
+# -----------------------------
+print("===== RUNNING INFERENCE =====")
 
+image_list = [
+    img for img in os.listdir(IMAGE_DIR)
+    if img.lower().endswith((".jpg", ".jpeg", ".png"))
+]
+
+if len(image_list) == 0:
+    print("No images found in images/ folder")
+    exit()
+
+for img_name in image_list:
     img_path = os.path.join(IMAGE_DIR, img_name)
     img = cv2.imread(img_path)
 
@@ -24,6 +42,7 @@ for img_name in os.listdir(IMAGE_DIR):
     results = model(img)
 
     elephant_found = False
+    non_wild_found = False
 
     for box in results[0].boxes:
         cls_id = int(box.cls)
@@ -31,15 +50,21 @@ for img_name in os.listdir(IMAGE_DIR):
 
         if cls_id == ELEPHANT_CLASS_ID:
             elephant_found = True
-            print(f"[{img_name}] Elephant detected | confidence: {conf:.2f}")
+            print(f"[{img_name}] ELEPHANT | confidence: {conf:.2f}")
+        else:
+            non_wild_found = True
+
+    if non_wild_found:
+        print(f"[{img_name}] NON-WILD object detected")
 
     output_path = os.path.join(OUTPUT_DIR, img_name)
     results[0].save(filename=output_path)
 
-    if not elephant_found:
-        print(f"[{img_name}] No elephant detected")
+print("Inference completed.\n")
 
-print("Inference completed successfully.")
+# -----------------------------
+# BENCHMARKING
+# -----------------------------
 print("===== RUNNING BENCHMARK =====")
 
 # Use first image for benchmarking
