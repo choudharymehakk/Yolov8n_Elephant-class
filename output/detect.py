@@ -128,7 +128,7 @@ print(f"Avg GPU (%)        : {avg_gpu_image}")
 print("\n===== VIDEO INFERENCE & GPU BENCHMARK =====")
 
 video_files = [
-    v for v in os.listdir(VIDEO_DIR)
+    v for v in os.listdir(IMAGE_DIR)
     if v.lower().endswith((".mp4", ".avi", ".mov"))
 ]
 
