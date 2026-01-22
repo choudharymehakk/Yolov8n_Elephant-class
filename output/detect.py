@@ -40,3 +40,30 @@ for img_name in os.listdir(IMAGE_DIR):
         print(f"[{img_name}] No elephant detected")
 
 print("Inference completed successfully.")
+print("===== RUNNING BENCHMARK =====")
+
+# Use first image for benchmarking
+benchmark_image = cv2.imread(
+    os.path.join(IMAGE_DIR, image_list[0])
+)
+
+# Warm-up (VERY IMPORTANT)
+for _ in range(10):
+    model(benchmark_image)
+
+start = time.time()
+
+for _ in range(BENCHMARK_RUNS):
+    model(benchmark_image)
+
+end = time.time()
+
+avg_time = (end - start) / BENCHMARK_RUNS
+fps = 1 / avg_time
+
+print("===== BENCHMARK RESULTS =====")
+print(f"Device           : Cloud Edge")
+print(f"Model            : YOLOv8 Nano (COCO pretrained)")
+print(f"Image size       : {benchmark_image.shape[1]}x{benchmark_image.shape[0]}")
+print(f"Inference time   : {avg_time*1000:.2f} ms")
+print(f"FPS              : {fps:.2f}")
